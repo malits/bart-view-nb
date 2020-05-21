@@ -17,7 +17,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 from traitlets import Unicode, Bool, validate, TraitError
 
-import cfl
+import bartviewer.cfl as cfl
 
 class BartViewWidget(object):
     
