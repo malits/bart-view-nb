@@ -1,0 +1,6 @@
+README.md
+setup.py
+bartviewer.egg-info/PKG-INFO
+bartviewer.egg-info/SOURCES.txt
+bartviewer.egg-info/dependency_links.txt
+bartviewer.egg-info/top_level.txt
