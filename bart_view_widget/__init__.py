@@ -1,1 +1,1 @@
-from .viewer import BartViewWidget
+from .bart_view_widget import BartViewWidget
