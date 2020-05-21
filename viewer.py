@@ -1,3 +1,13 @@
+#
+# Copyright 2015. The Regents of the University of California.
+# All rights reserved. Use of this source code is governed by
+# a BSD-style license which can be found in the LICENSE file.
+#
+# Authors:
+# 2015 Frank Ong <frankong@berkeley.edu>
+# 2020 Max Litster <litster@berkeley.edu>
+
+
 import copy
 from functools import partial
 
@@ -31,7 +41,7 @@ class BartViewWidget(object):
         self.im_slice = self.im_ordered[(slice(None), slice(None)) + tuple(self.slice_num[2:])]
         
         # Create figure
-        self.fig = plt.figure(facecolor='black', figsize=(4.5, 3))
+        self.fig = plt.figure(facecolor='black', figsize=(3, 3))
         self.fig.subplots_adjust(left=0.0, bottom=0.0, right=1.0, top=1.0)
         self.fig.canvas.set_window_title(self.cflname)
         
@@ -97,7 +107,7 @@ class BartViewWidget(object):
         magnitude_radios = widgets.RadioButtons(
             options=["Mag", "Phase"]
         )
-        radios.append(magnitude_radios)
+        #radios.append(magnitude_radios)
         
         # create aspect sliders
         aspect_slider = widgets.FloatSlider(min=0.25, max=4, step=0.05, value=1.0, description="Aspect Ratio")
@@ -113,18 +123,27 @@ class BartViewWidget(object):
         sliders.append(vmax_slider)
         
         # Create sliders for choosing a slice
-        dim_sliders = []
+        dim_slider_dict = {}
+        dim_slider_list = []
         for d in np.r_[:self.Ndims]:
             slice_slider = widgets.IntSlider(min=0, max=self.im_shape[d]-1, step=1, \
                                              value=self.slice_num[d], description=f'Dim {self.im_unsqueeze_shape[d]} Slice')
-            sliders.append(slice_slider)
-            dim_sliders.append(slice_slider)
+            dim_slider_dict[d] = slice_slider
+            dim_slider_list.append(slice_slider)
         
-        # Display widgets
-        self.out = widgets.Output()
-        
-        controls = radios + buttons + sliders + [self.out]
-        display(*controls)
+        # Display widgets        
+        controls = radios + buttons + sliders + dim_slider_list
+
+        radio_box = widgets.VBox(radios)
+        button_box = widgets.VBox(buttons + [magnitude_radios])
+        slider_box = widgets.VBox(sliders + dim_slider_list)
+
+        layout = widgets.AppLayout(header=None,
+                                    left_sidebar=radio_box,
+                                    center=slider_box,
+                                    right_sidebar=button_box)
+
+        display(layout)
         
         # Functionality
         up_down.observe(self.update_orderx, names='value')
@@ -144,8 +163,10 @@ class BartViewWidget(object):
         vmin_slider.observe(self.update_vmin, names='value')
         vmax_slider.observe(self.update_vmax, names='value')
         
-        for dim_slider in dim_sliders:
-            dim_slider.observe(self.update_slice, names='value')
+        for dim_slider in dim_slider_dict:
+            curr_slider = dim_slider_dict[dim_slider]
+            dim = int(dim_slider)
+            curr_slider.observe(partial(self.update_slice, dim), names='value')
         
         plt.show()
         
@@ -243,10 +264,9 @@ class BartViewWidget(object):
             
         self.fig.canvas.draw()
         
-    def update_slice(self, changes):
-        d = int(changes["owner"].description[4])
+    def update_slice(self, d, changes):
         s = changes["new"]
-        self.slice_num[d - 1] = s
+        self.slice_num[d] = s
         self.update_image()
         
     def mosaic( self, im ):
